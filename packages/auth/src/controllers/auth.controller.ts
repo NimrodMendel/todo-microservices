@@ -32,10 +32,10 @@ const login = async (req: Request, res: Response, next?: NextFunction) => {
 };
 
 const register = async (req: Request, res: Response, next?: NextFunction) => {
-  const { email, firstName, lastName } = req.body;
+  const { email, firstName, lastName, password } = req.body;
 
   try {
-    const existingUser = await User.findOne(User, { email });
+    const existingUser = await User.findOne({ email });
 
     if (existingUser) {
       return res
@@ -45,6 +45,7 @@ const register = async (req: Request, res: Response, next?: NextFunction) => {
 
     const newUser = new User({
       email,
+      password,
       firstName,
       lastName,
     });

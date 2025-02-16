@@ -1,0 +1,37 @@
+services:
+  auth-db:
+    image: mongo:5.0.2
+    restart: always
+    container_name: Auth_DB
+    env_file:
+      - ../../packages/auth/.env
+    ports:
+      - "27017:27017"
+    volumes:
+      - db:/data/db
+    networks:
+      - backend_network
+
+  auth:
+    container_name: Auth_Service
+    build:
+      context: ../../packages/auth
+      dockerfile: Dockerfile
+    depends_on:
+      - auth-db
+    env_file:
+      - ../../packages/auth/.env
+    ports:
+      - "3010:3010"
+    volumes:
+      - ../../packages/auth:/app
+      - /app/node_modules
+    networks:
+      - backend_network
+
+networks:
+  backend_network:
+    driver: bridge
+
+volumes:
+  db:
