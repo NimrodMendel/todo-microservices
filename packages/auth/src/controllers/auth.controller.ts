@@ -3,6 +3,7 @@ import User from "../models/user.model";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Config } from "../config/config";
+import { publishUserCreated } from "../messaging/rabbitmq.publisher";
 
 const login = async (req: Request, res: Response, next?: NextFunction) => {
   const { email, password } = req.body;
@@ -55,6 +56,8 @@ const register = async (req: Request, res: Response, next?: NextFunction) => {
     const token = jwt.sign({ id: newUser._id }, Config.jwt_secret!, {
       expiresIn: "1h",
     });
+
+    await publishUserCreated(newUser._id.toString());
 
     res.status(201).send({ token });
   } catch (error) {

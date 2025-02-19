@@ -12,6 +12,17 @@ services:
     networks:
       - backend_network
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: RabbitMQ
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file:
+      - ../rabbitmq/rabbitmq.env
+    networks:
+      - backend_network
+
   auth:
     container_name: Auth_Service
     build:
@@ -21,6 +32,7 @@ services:
       - auth-db
     env_file:
       - ../../packages/auth/.env
+      - ../rabbitmq/rabbitmq.env
     ports:
       - "3010:3010"
     volumes:
@@ -28,6 +40,21 @@ services:
       - /app/node_modules
     networks:
       - backend_network
+
+  dashboard:
+    container_name: Dashboard
+    build:
+      context: ../../packages/frontend
+      dockerfile: Dockerfile
+    depends_on:
+      - auth-db
+    env_file:
+      - ../../packages/frontend/.env
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../../packages/frontend:/app
+      - /app/node_modules
 
 networks:
   backend_network:
