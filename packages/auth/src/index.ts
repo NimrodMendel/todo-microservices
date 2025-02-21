@@ -6,7 +6,7 @@ import { connectToDb } from "./config/db";
 const app = express();
 app.use(express.json());
 
-app.use("/auth", authRouter);
+app.use("/", authRouter);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello World!");

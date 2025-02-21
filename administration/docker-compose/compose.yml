@@ -23,6 +23,23 @@ services:
     networks:
       - backend_network
 
+  api:
+    container_name: API_Gateway
+    build:
+      context: ../../packages/api
+      dockerfile: Dockerfile
+    depends_on:
+      - auth-db
+    env_file:
+      - ../../packages/api/.env
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../../packages/api:/app
+      - /app/node_modules
+    networks:
+      - backend_network
+
   auth:
     container_name: Auth_Service
     build:
