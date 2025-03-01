@@ -4,8 +4,16 @@ import rateLimit from "express-rate-limit";
 import slowDown from "express-slow-down";
 import cors from "cors";
 import proxy from "express-http-proxy";
+import morgan from "morgan";
 
 const app = express();
+app.use(
+  morgan("common", {
+    skip: function (req, res) {
+      return res.statusCode < 400;
+    },
+  })
+);
 
 const limiter = rateLimit({
   windowMs: 60 * 1000,
@@ -27,8 +35,8 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello from API Gateway");
 });
 
-app.use("/auth", proxy("http://auth:3010"));
-app.use("/to-do", proxy("http://to-do:3020"));
+app.use("/auth", proxy(Config.auth_address!));
+app.use("/to-do", proxy(Config.todo_address!));
 
 app.listen(Config.app_port, () => {
   console.log(
