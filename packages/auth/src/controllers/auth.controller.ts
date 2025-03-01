@@ -1,69 +1,45 @@
-import { NextFunction, Request, Response } from "express";
-import User from "../models/user.model";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import { Config } from "../config/config";
-import { publishUserCreated } from "../messaging/rabbitmq.publisher";
+import { Request, Response } from "express";
+import { AuthService } from "../services/auth.service";
+import { LoginDto } from "../dto/login.dto";
+import { SignupDto } from "../dto/signup.dto";
+import { AuthError } from "../errors/auth.error";
 
-const login = async (req: Request, res: Response, next?: NextFunction) => {
-  const { email, password } = req.body;
+class AuthController {
+  private authService: AuthService;
 
-  try {
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ message: "Invalid credentials!" });
-    }
-
-    const isMatch = await bcrypt.compare(password, user?.password);
-
-    if (!isMatch) {
-      return res.status(401).json({ massage: "Invalid credentials!" });
-    }
-
-    const token = jwt.sign({ id: user._id }, Config.jwt_secret!, {
-      expiresIn: "1h",
-    });
-
-    res.status(200).send({ token });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
+  constructor() {
+    this.authService = new AuthService();
   }
-};
 
-const register = async (req: Request, res: Response, next?: NextFunction) => {
-  const { email, firstName, lastName, password } = req.body;
-
-  try {
-    const existingUser = await User.findOne({ email });
-
-    if (existingUser) {
-      return res
-        .status(400)
-        .json({ message: "User with that email already exists!" });
+  async login(req: Request, res: Response) {
+    try {
+      const { email, password } = req.body;
+      const payload: LoginDto = { email, password };
+      const result = await this.authService.login(payload);
+      res.status(200).json({ data: result });
+    } catch (error) {
+      if (error instanceof AuthError) {
+        return res.status(error.status).json({ message: error.message });
+      }
+      console.error("Login Error:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
-
-    const newUser = new User({
-      email,
-      password,
-      firstName,
-      lastName,
-    });
-
-    await newUser.save();
-
-    const token = jwt.sign({ id: newUser._id }, Config.jwt_secret!, {
-      expiresIn: "1h",
-    });
-
-    await publishUserCreated(newUser._id.toString());
-
-    res.status(201).send({ token });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
   }
-};
 
-export { login, register };
+  async signup(req: Request, res: Response) {
+    try {
+      const { email, password, firstName, lastName } = req.body;
+      const payload: SignupDto = { email, password, firstName, lastName };
+      const result = await this.authService.signup(payload);
+      res.status(201).json({ data: result });
+    } catch (error) {
+      if (error instanceof AuthError) {
+        return res.status(error.status).json({ message: error.message });
+      }
+      console.error("Signup Error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
+}
+
+export { AuthController };
