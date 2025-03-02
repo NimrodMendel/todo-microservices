@@ -1,9 +1,11 @@
+import { CreateTodoDto } from "../dto/createToDo.dto";
+import { UpdateTodoDto } from "../dto/updateTodo.dto";
 import { Todo } from "../models/to-do.model";
 
 class TodoService {
-  async getToDos() {
+  async getToDos(userId: string) {
     try {
-      const todos = await Todo.find();
+      const todos = await Todo.find({ userId, isActive: true });
 
       return todos;
     } catch (error) {
@@ -20,11 +22,51 @@ class TodoService {
     }
   }
 
-  async createTodo(payload: any) {}
+  async createTodo(payload: CreateTodoDto) {
+    const { title, description, userId } = payload;
 
-  async updateTodo() {}
+    const newTodo = new Todo({
+      title,
+      description,
+      userId,
+    });
 
-  async deleteTodo(id: string) {}
+    await newTodo.save();
+
+    return newTodo;
+  }
+
+  async updateTodo(id: string, payload: UpdateTodoDto) {
+    const todo = await this.getTodoById(id);
+
+    if (!todo) {
+      throw new Error("Invalid parameters: To-Do not found");
+    }
+
+    const updated = await Todo.updateOne({ _id: id }, { $set: { ...payload } });
+
+    return updated;
+  }
+
+  async deleteTodo(id: string) {
+    const todo = await this.getTodoById(id);
+
+    if (!todo) {
+      throw new Error("Illegal params");
+    }
+
+    const deletedTodo = await this.updateTodo(id, { isActive: false });
+  }
+
+  async markAsCompleted(id: string) {
+    const todo = await this.getTodoById(id);
+
+    if (!todo) {
+      throw new Error("Illegal params");
+    }
+
+    const completedTodo = await this.updateTodo(id, { isCompleted: true });
+  }
 }
 
 export { TodoService };

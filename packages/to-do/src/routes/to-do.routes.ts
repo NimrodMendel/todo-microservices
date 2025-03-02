@@ -1,50 +1,31 @@
 import { TodoController } from "../controllers/to-do.controller";
 import express, { Request, Response } from "express";
 
+const todoRouter = express.Router();
 const todoController = new TodoController();
 
-const todoRouter = express.Router();
-
 todoRouter.get("/", async (req: Request, res: Response) => {
-  try {
-    const todos = await todoController.getToDos();
-
-    res.status(200).send({ todos });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({ message: "Internal Server Error" });
-  }
+  await todoController.getToDos(req, res);
 });
 
 todoRouter.get("/:id", async (req: Request, res: Response) => {
-  const { id } = req.params;
-
-  const todo = await todoController.getTodoById(id);
-
-  res.send({ todo });
+  await todoController.getTodoById(req, res);
 });
 
 todoRouter.post("/", async (req: Request, res: Response) => {
-  const payload = req.body;
-
-  const newTodo = await todoController.createTodo(payload);
-
-  res.send({ newTodo });
+  await todoController.createTodo(req, res);
 });
 
 todoRouter.put("/:id", async (req: Request, res: Response) => {
-  const id = req.params;
-  const payload = req.body;
+  await todoController.updateTodo(req, res);
+});
 
-  const updated = await todoController.updateTodo();
-
-  res.send({ tood: updated });
+todoRouter.patch("/:id/markAsComplete", async (req: Request, res: Response) => {
+  await todoController.markAsCompleted(req, res);
 });
 
 todoRouter.delete("/:id", async (req: Request, res: Response) => {
-  const id = req.params;
-
-  res.send({ todo: id });
+  await todoController.deleteTodo(req, res);
 });
 
 export { todoRouter };

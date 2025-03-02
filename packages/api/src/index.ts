@@ -5,15 +5,10 @@ import slowDown from "express-slow-down";
 import cors from "cors";
 import proxy from "express-http-proxy";
 import morgan from "morgan";
+import helmet from "helmet";
+import { authMiddleware } from "./middleware/auth";
 
 const app = express();
-app.use(
-  morgan("common", {
-    skip: function (req, res) {
-      return res.statusCode < 400;
-    },
-  })
-);
 
 const limiter = rateLimit({
   windowMs: 60 * 1000,
@@ -35,13 +30,21 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(helmet());
+app.use(
+  morgan("common", {
+    skip: function (req, res) {
+      return res.statusCode < 400;
+    },
+  })
+);
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello from API Gateway");
 });
 
 app.use("/auth", proxy(Config.auth_address!));
-app.use("/to-do", proxy(Config.todo_address!));
+app.use("/to-do", authMiddleware, proxy(Config.todo_address!));
 
 app.listen(Config.app_port, () => {
   console.log(
