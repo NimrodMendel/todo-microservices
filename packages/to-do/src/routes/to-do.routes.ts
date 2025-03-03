@@ -5,6 +5,7 @@ const todoRouter = express.Router();
 const todoController = new TodoController();
 
 todoRouter.get("/", async (req: Request, res: Response) => {
+  console.log(req);
   await todoController.getToDos(req, res);
 });
 

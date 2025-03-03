@@ -12,7 +12,12 @@ class TodoController {
 
   async getToDos(req: Request, res: Response) {
     try {
-      const userId = req.user.id;
+      const user = req.headers["x-user-data"]
+        ? JSON.parse(req.headers["x-user-data"] as string)
+        : null;
+
+      const userId = user.id;
+      console.log("@@@@@@@@@@@@@@", userId);
 
       if (!userId) {
         throw new Error("Illegal params!");
@@ -40,9 +45,7 @@ class TodoController {
       res.status(200).json({ data: result });
     } catch (error) {
       console.error(error);
-      res
-        .status(500)
-        .json({ message: error.message || "Internal server error" });
+      res.status(500).json({ message: "Internal server error" });
     }
   }
 

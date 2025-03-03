@@ -12,6 +12,19 @@ services:
     networks:
       - backend_network
 
+  todo-db:
+    image: mongo:5.0.2
+    restart: always
+    container_name: Todo_DB
+    env_file:
+      - ../../packages/to-do/.env
+    ports:
+      - "27018:27017"
+    volumes:
+      - todo_db:/data/db
+    networks:
+      - backend_network
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: RabbitMQ
@@ -58,6 +71,25 @@ services:
     networks:
       - backend_network
 
+  todo:
+    container_name: Todo_Service
+    build:
+      context: ../../packages/to-do
+      dockerfile: Dockerfile
+    depends_on:
+      - todo-db
+      - auth-db
+    env_file:
+      - ../../packages/to-do/.env
+      - ../rabbitmq/rabbitmq.env
+    ports:
+      - "3020:3020"
+    volumes:
+      - ../../packages/to-do:/app
+      - /app/node_modules
+    networks:
+      - backend_network
+
   dashboard:
     container_name: Dashboard
     build:
@@ -81,3 +113,4 @@ networks:
 
 volumes:
   db:
+  todo_db:

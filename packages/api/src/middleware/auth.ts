@@ -27,7 +27,7 @@ const authMiddleware = (
       return;
     }
 
-    (req as any).user = user;
+    req.headers["x-user-data"] = JSON.stringify(user);
     next(); // Call next() to proceed to the next middleware or route handler.
   });
 };
